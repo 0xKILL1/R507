@@ -32,40 +32,6 @@ def ssh(id: int, cmd: CommandeRequest, session: Session = Depends(get_session)):
         "exit_code": code
     }
 
-@router.get("/start/cron/{id}")
-def startcron(id: int, session: Session = Depends(get_session)):
-    pass
-    """
-    eqt = session.get(Equipement, id)
-    if not eqt:
-        raise HTTPException(404, "Equipement non trouvé")
-    else:
-        threading.Thread(target=worker(id)).start()
-"""
-@router.get("/stop/cron/{id}")
-def stopcron(id:int, session: Session = Depends(get_session)):
-    pass
-"""
-    eqt = session.get(Equipement, id)
-    if not eqt:
-        raise HTTPException(404, "Equipement non trouvé")
-    else:
-        threading.Thread(target=worker(id=id,ip=eqt.ip)).stop()
-"""
-@router.get("/dispo/{id}")
-def stopcron(id:int, session: Session = Depends(get_session)):
-    pass
-    """
-    eqt = session.get(Equipement, id)
-    if not eqt:
-        raise HTTPException(404, "Equipement non trouvé")
-    else:
-        threading.Thread(target=worker(id=id,ip=eqt.ip)).stop()"""
-
-#async pas thread
-#bdd 3 avec equipement ordi et routeur
-#faire jwt
-#
 @router.get("/Ordinateurs")
 def read_Ordinateurs(session: Session = Depends(get_session)) -> list[Ordinateur]:
     return session.exec(select(Ordinateur)).all()
