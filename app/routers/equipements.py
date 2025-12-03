@@ -5,6 +5,7 @@ import re
 from ..models import Ordinateur, Routeur
 from ..bdd import configure_db, get_session
 from ..services.ssh_service import SSHConnection
+from ..bdd_user import configure_db_user, get_session_user
 
 ping_regex = re.compile(r"(?P<res>\d) received")
 
