@@ -1,16 +1,13 @@
 from fastapi import FastAPI, HTTPException, Depends
 from sqlmodel import Session, select
 from models import Equipement
-from bdd import configure_db, engine
-import socket, paramiko
 from pydantic import BaseModel
-from typing import Optional
 from pydantic import BaseModel
 import threading
 import re,os
 import json
 from models import Ordinateur, Equipement, Routeur
-from bdd import configure_db, engine, get_session
+from bdd import configure_db, get_session
 
 ping_regex = re.compile(r"(?P<res>\d) received")
 
@@ -20,28 +17,6 @@ class CommandeRequest(BaseModel):
 def on_start_up():
     configure_db()
 
-class SSHConnection(BaseModel):
-    hostname: Optional[str] = None
-    username: str
-    password: str
-    port: int = 22
-
-    def execute_command(self, command: str) -> tuple[str, str, int]:
-        try:
-            client = paramiko.SSHClient()
-            
-            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            
-            client.connect(self.hostname, self.port, self.username, self.password)
-            stdin, stdout, stderr = client.exec_command(command)
-            
-            exit_code = stdout.channel.recv_exit_status()
-            result = stdout.read().decode(), stderr.read().decode(), exit_code
-            client.close()
-            return result
-        except Exception as e:
-            return "", str(e), -1
-        
 app = FastAPI(on_startup=[on_start_up])
 
 
