@@ -1,12 +1,10 @@
 from fastapi import FastAPI, HTTPException, Depends
 from sqlmodel import Session, select
-from models import Equipement
-from pydantic import BaseModel
 from pydantic import BaseModel
 import threading
 import re,os
 import json
-from models import Ordinateur, Equipement, Routeur
+from ..app.routers import Ordinateur, Equipement, Routeur
 from bdd import configure_db, get_session
 
 ping_regex = re.compile(r"(?P<res>\d) received")
