@@ -22,4 +22,4 @@ class SSHConnection(BaseModel):
             client.close()
             return result
         except Exception as e:
-            return "", str(e), -1
+            return "", str(e), -1    

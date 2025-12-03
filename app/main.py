@@ -1,13 +1,13 @@
-from fastapi import APIRouter, FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.concurrency import run_in_threadpool
 from sqlmodel import Session, select
 from pydantic import BaseModel
 import threading
 import re,os
 import json
-from ..app.routers import Ordinateur, Equipement, Routeur
+from .models import Ordinateur, Equipement, Routeur
 from .bdd import configure_db, get_session
-from .services.ssh_service import
+from .services.ssh_service import SSHConnection
 
 ping_regex = re.compile(r"(?P<res>\d) received")
 
@@ -85,45 +85,34 @@ def ssh(id: int, cmd: CommandeRequest, session: Session = Depends(get_session)):
 
 @app.get("/start/cron/{id}")
 def startcron(id: int, session: Session = Depends(get_session)):
+    pass
+    """
     eqt = session.get(Equipement, id)
     if not eqt:
         raise HTTPException(404, "Equipement non trouvé")
     else:
         threading.Thread(target=worker(id)).start()
-
+"""
 @app.get("/stop/cron/{id}")
 def stopcron(id:int, session: Session = Depends(get_session)):
+    pass
+"""
     eqt = session.get(Equipement, id)
     if not eqt:
         raise HTTPException(404, "Equipement non trouvé")
     else:
         threading.Thread(target=worker(id=id,ip=eqt.ip)).stop()
-
+"""
 @app.get("/dispo/{id}")
 def stopcron(id:int, session: Session = Depends(get_session)):
+    pass
+    """
     eqt = session.get(Equipement, id)
     if not eqt:
         raise HTTPException(404, "Equipement non trouvé")
     else:
-        threading.Thread(target=worker(id=id,ip=eqt.ip)).stop()
+        threading.Thread(target=worker(id=id,ip=eqt.ip)).stop()"""
 
-def worker(ip:str,id:int):
-    ping_reussi=0
-    total_ping=0
-
-    cmd = os.popen(f"ping -c 2 {ip}")
-    res = cmd.read()
-    matchs = ping_regex.search(res)
-    if int(matchs.group("res")) == 2:
-        ping_reussi+=1
-    else:
-        total_ping+=1
-    calcul=ping_reussi/total_ping
-    proba={id:calcul}
-
-    with open("dispo.json","a")as f:
-        json.load(proba,f)
-    
 #async pas thread
 #bdd 3 avec equipement ordi et routeur
 #faire jwt
