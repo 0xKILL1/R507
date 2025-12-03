@@ -1,0 +1,17 @@
+meta {
+  name: New HTTP Request
+  type: http
+  seq: 1
+}
+
+put {
+  url: http://localhost:8000/equipement/1
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "hostname":"172.28.103.235"
+  }
+}

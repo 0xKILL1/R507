@@ -1,0 +1,27 @@
+meta {
+  name: New HTTP Request
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://127.0.0.1:8000/api/v1/equipements/Routeur
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "hostname": "Router",
+      "ip": "192.168.1.1",
+      "is_up": true, 
+      "username": "admin_router",
+      "password": "secure-password",
+      "nb_interface": 4,
+      "interfaces_ip": [
+          { "name": "GigabitEthernet0/0", "ip": "192.168.1.1" },
+          { "name": "GigabitEthernet0/1", "ip": "10.0.0.1" },
+          { "name": "Loopback0", "ip": "1.1.1.1" }
+      ]
+  }
+}

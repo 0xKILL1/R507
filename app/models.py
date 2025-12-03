@@ -1,18 +1,50 @@
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from sqlmodel import SQLModel, Field, Column, JSON
-from fastapi import APIRouter, FastAPI, HTTPException, Depends
+from pydantic import BaseModel, ConfigDict 
 
-router = APIRouter(prefix="/equipements", tags=["Gestion des équipements"])
 
-class Equipement(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+class SharedFields(BaseModel):
+    model_config = ConfigDict(extra='ignore') 
     hostname: str
     ip: str
+    is_up: bool = False
 
-class Ordinateur(Equipement,SQLModel, table=True):
-    ram : str
-    disk: list[dict] = Field(default_factory=list, sa_column=Column(JSON))
+class OrdinateurCreate(SharedFields):
+    ram: Optional[str] = None
+    disk: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
+    
+class OrdinateurRead(OrdinateurCreate):
+    id: int
 
-class Routeur(Equipement,SQLModel, table=True):
-    nb_interface: int = None
-    ip : Optional[list[dict]] = Field(default_factory=list, sa_column=Column(JSON))
+class Ordinateur(SharedFields, SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    
+    hostname: str
+    ip: str
+    is_up: bool = False
+
+    ram: Optional[str] = None
+    disk: Optional[List[Dict[str, Any]]] = Field(
+        default_factory=list, 
+        sa_column=Column(JSON)
+    ) 
+
+class RouteurCreate(SharedFields):
+    nb_interface: Optional[int] = None
+    interfaces_ip: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
+
+class RouteurRead(RouteurCreate):
+    id: int
+
+class Routeur(SharedFields, SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    
+    hostname: str
+    ip: str
+    is_up: bool = False
+
+    nb_interface: Optional[int] = None
+    interfaces_ip: Optional[List[Dict[str, Any]]] = Field(
+        default_factory=list, 
+        sa_column=Column(JSON)
+    )
