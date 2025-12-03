@@ -5,7 +5,15 @@ from bdd import configure_db, engine
 import socket, paramiko
 from pydantic import BaseModel
 from typing import Optional
+from pydantic import BaseModel
+import threading
+import re,os
+import json
 
+ping_regex = re.compile(r"(?P<res>\d) received")
+
+class CommandeRequest(BaseModel):
+    commandes: str
 
 def on_start_up():
     configure_db()
@@ -22,7 +30,7 @@ class SSHConnection(BaseModel):
             
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             
-            client.connect(self.hostname, self.port, self.username, self.password, key_filename=self.key_filename)
+            client.connect(self.hostname, self.port, self.username, self.password)
             stdin, stdout, stderr = client.exec_command(command)
             
             exit_code = stdout.channel.recv_exit_status()
@@ -90,9 +98,70 @@ def delete_host(host_id: int):
 
 
 @app.post("/ssh/{id}")
-def ssh(id: int):
+def ssh(id: int, cmd: CommandeRequest):
     with Session(engine) as session:
         eqt = session.get(Equipement, id)
-        ssh=SSHConnection(hostname=eqt.hostname,username="root",password="bonjour")
-        resu=ssh.execute_command("ls")
-        print(resu)
+        if not eqt:
+            raise HTTPException(404, "Equipement non trouvé")
+        
+        ssh_conn = SSHConnection(
+            hostname=eqt.hostname,
+            username=eqt.username,
+            password=eqt.password
+        )
+        output, error, code = ssh_conn.execute_command(cmd.commandes)
+        
+        return {
+            "output": output,
+            "error": error,
+            "exit_code": code
+        }
+
+@app.get("/start/cron/{id}")
+def startcron(id: int):
+    with Session(engine) as session:
+        eqt = session.get(Equipement, id)
+        if not eqt:
+            raise HTTPException(404, "Equipement non trouvé")
+        else:
+            threading.Thread(target=worker(id)).start()
+
+@app.get("/stop/cron/{id}")
+def stopcron(id:int):
+    with Session(engine) as session:
+        eqt = session.get(Equipement, id)
+        if not eqt:
+            raise HTTPException(404, "Equipement non trouvé")
+        else:
+            threading.Thread(target=worker(id=id,ip=eqt.ip)).stop()
+
+@app.get("/dispo/{id}")
+def stopcron(id:int):
+    with Session(engine) as session:
+        eqt = session.get(Equipement, id)
+        if not eqt:
+            raise HTTPException(404, "Equipement non trouvé")
+        else:
+            threading.Thread(target=worker(id=id,ip=eqt.ip)).stop()
+
+def worker(ip:str,id:int):
+    ping_reussi=0
+    total_ping=0
+
+    cmd = os.popen(f"ping -c 2 {ip}")
+    res = cmd.read()
+    matchs = ping_regex.search(res)
+    if int(matchs.group("res")) == 2:
+        ping_reussi+=1
+    else:
+        total_ping+=1
+    calcul=ping_reussi/total_ping
+    proba={id:calcul}
+
+    with open("dispo.json","a")as f:
+        json.load(proba,f)
+    
+#async pas thread
+#bdd 3 avec equipement ordi et routeur
+#faire jwt
+#

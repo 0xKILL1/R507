@@ -8,10 +8,7 @@ class Equipement(SQLModel, table=True):
     type: str = "Equipement"
     username: str
     password: Optional[str] = None
-    key_filename: Optional[str] = None
     ram: Optional[str] = "8gb"
-    disk: Optional[str] = "C:\\"
-    
-
+    disk: Optional[str] = "400GB"
     nb_interface: Optional[int] = 1
     interface: Optional[str] = ""
