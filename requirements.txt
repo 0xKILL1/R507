@@ -4,3 +4,4 @@ sqlmodel
 pydantic
 paramiko
 passlib
+jwt

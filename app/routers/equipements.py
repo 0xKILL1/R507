@@ -2,12 +2,11 @@ from fastapi import APIRouter, FastAPI, HTTPException, Depends
 from sqlmodel import Session, select
 from pydantic import BaseModel
 import re
-from ..models import Ordinateur, Routeur
+from ..models import Ordinateur, Routeur, User
 from ..bdd import configure_db, get_session
 from ..services.ssh_service import SSHConnection
 from ..bdd_user import configure_db_user, get_session_user
-
-ping_regex = re.compile(r"(?P<res>\d) received")
+from .auth import Requete,toHash,verify_password,create_access_token,Token
 
 router = APIRouter(prefix="/supervision",tags=["Gestion des équipements"])
 
@@ -131,7 +130,7 @@ def ssh_ordinateur(id: int, cmd: CommandeRequest, session: Session = Depends(get
         hostname=eqt.hostname if eqt.hostname else eqt.ip,
         username=eqt.username,
         password=eqt.password,
-        port=2222
+        port=22
         )
     
     output, error, code = ssh_conn.execute_command(cmd.commandes)
@@ -141,3 +140,11 @@ def ssh_ordinateur(id: int, cmd: CommandeRequest, session: Session = Depends(get
         "error": error,
         "exit_code": code
     }
+
+@router.post("/auth", response_model=Token)
+def token(requete:Requete, session: Session = Depends(get_session_user))->Token:
+    mail=requete.mail
+    mdp=requete.mdp
+    UserBDD=session.get(User,mail)
+    if verify_password(psswd_clair=mdp,psswd_bdd=UserBDD.MdpHash):
+        pass

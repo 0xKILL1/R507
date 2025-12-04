@@ -51,13 +51,10 @@ class Routeur(SharedFields, SQLModel, table=True):
         sa_column=Column(JSON)
     )
 
-class User(BaseModel,SQLModel,table=True):
-    id: Optional[int]=Field(default=None,primary_key=True)
-    nom: str
-    HashPsswd: str
-    email: Optional[str]=""
-    adresse: Optional[str]=""
+class User(SQLModel,table=True):
+     email: Optional[str]=Field(default=None,primary_key=True)
+     MdpHash: str
 
-
-
+class UserRead(BaseModel):
+    mail: str
 
