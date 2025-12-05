@@ -3,6 +3,59 @@
 # API de Supervision et Gestion d'Équipements
 
 Cette API REST, développée avec **FastAPI**, permet la gestion d'inventaire d'équipements réseaux (Ordinateurs et Routeurs) et l'exécution de commandes à distance via SSH. Elle intègre un système d'authentification sécurisé via JWT.
+---
+
+## 📸 Guide d'utilisation illustré
+
+Cette section détaille les étapes d'utilisation de l'API, de l'authentification à l'exécution de commandes, en se basant sur les images de Bruno et de votre script de test.
+
+### 1. 🔑 Authentification et Obtention du Token
+
+L'accès aux endpoints sécurisés (SSH) nécessite un jeton JWT.
+
+#### 1.1. Identifiants Root par Défaut
+Les identifiants de connexion initiaux (Root User) sont définis dans le code :
+* **Username/Email :** `root@gmail.com` (ou celui configuré)
+* **Password :** bonjour(ou celui configuré)
+
+![Identifiants Root User](img/compteRootParDefaut.jpg)
+
+#### 1.2. Récupération et Injection du Token
+Le jeton est récupéré via l'endpoint `/supervision/token`. L'utilisation d'un script (comme `testRecupToken.py`) est recommandée pour automatiser la connexion et l'injection du token dans les variables d'environnement de votre client HTTP (ex: Bruno).
+
+![Code du script de test pour le token](img/test.jpg)
+
+### 2. ➕ Ajout d'Équipements à Superviser
+
+Les requêtes `POST` sont utilisées pour enregistrer les équipements, y compris leurs identifiants SSH pour les connexions futures.
+
+#### 2.1. Ajouter un Ordinateur
+Utilisez l'endpoint `/supervision/Ordinateur` et fournissez les informations de connexion et d'identification.
+
+![Schéma de la requête pour ajouter un Ordinateur](img/ajoutOrdi.jpg)
+
+#### 2.2. Ajouter un Routeur
+Utilisez l'endpoint `/supervision/Routeur` pour enregistrer un nouveau routeur.
+
+![Schéma de la requête pour ajouter un Routeur](img/ajoutRouteurBr.jpg)
+
+### 3. ⌨️ Exécution de Commandes SSH (Sécurisée)
+
+Une fois le token récupéré (étape 1.2) et l'équipement ajouté (étape 2), vous pouvez exécuter des commandes.
+
+#### 3.1. Requête SSH avec Token Valide
+Le token valide est utilisé dans l'en-tête `Authorization: Bearer <TOKEN>` pour autoriser la requête et exécuter la commande à distance.
+
+![Exemple de requête SSH avec token valide](img/imagerequetesavectoken.jpg)
+
+### 4. 🛑 Gestion de l'Expiration du Token
+
+Le token JWT a une durée de validité limitée (fixée à 24 heures par défaut dans votre configuration).
+
+#### 4.1. Token Expiré ou Invalide
+Si le token est invalide ou a expiré, l'accès est refusé, entraînant une erreur `401 Unauthorized`. Vous devez relancer l'étape de récupération du token.
+
+![Réponse API en cas de token invalide ou absent](img/schemadedonnéeaenvoyécommande.jpg)
 
 ## 🛠️ Stack Technique
 
