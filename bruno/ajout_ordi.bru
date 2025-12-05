@@ -5,18 +5,18 @@ meta {
 }
 
 post {
-  url: http://127.0.0.1:8000/api/v1/equipements/Ordinateur
+  url: http://127.0.0.1:8000/api/v1/supervision/Ordinateur
   body: json
   auth: none
 }
 
 body:json {
   {
-      "hostname": "PC-Bureau-DSI",
-      "ip": "172.16.1.105",
+      "hostname": "localhost",
+      "ip": "127.0.0.1",
       "is_up": true,
-      "username": "user_local",
-      "password": "local-pwd",
+      "username": "root",
+      "password": "testpassword",
       "ram": "32 GB DDR4",
       "disk": [
           {

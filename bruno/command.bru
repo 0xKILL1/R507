@@ -5,9 +5,13 @@ meta {
 }
 
 post {
-  url: http://localhost:8000/equipement
+  url: http://localhost:8000/api/v1/supervision/ssh/Ordinateur/3
   body: json
-  auth: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJyb290QGdtYWlsLmNvbSIsImV4cCI6MTc2NTAzNDc5MH0.ubJopEfv_GNy22TVPfrAU7mO_matkbpGdPhH-xco7hU
 }
 
 body:json {

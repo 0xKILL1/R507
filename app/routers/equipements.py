@@ -1,15 +1,23 @@
-from fastapi import APIRouter, FastAPI, HTTPException, Depends
-from sqlmodel import Session, select
+from fastapi import APIRouter, HTTPException, Depends, status
+from sqlmodel import Session, select, SQLModel
 from pydantic import BaseModel
-import re
-from ..models import Ordinateur, Routeur, User
-from ..bdd import configure_db, get_session
+from typing import List, Type, Annotated
+from datetime import timedelta
+from ..models import Ordinateur, Routeur, User  
+from ..bdd import get_session
 from ..services.ssh_service import SSHConnection
-from ..bdd_user import configure_db_user, get_session_user
-from .auth import Requete,toHash,verify_password,create_access_token,Token
+from .auth import (
+    authenticate_user,
+    create_access_token,
+    get_current_user,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    Token
+)
+from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter(prefix="/supervision",tags=["Gestion des équipements"])
 
+user=User(email="test@gmail.com",)
 class CommandeRequest(BaseModel):
     commandes: str
 
@@ -101,7 +109,7 @@ def delete_Routeur(host_id: int, session: Session = Depends(get_session)):
     return {"ok": True}
 
 @router.post("/ssh/Routeur/{id}")
-def ssh_routeur(id: int, cmd: CommandeRequest, session: Session = Depends(get_session)):
+def ssh_routeur(id: int, cmd: CommandeRequest, session: Session = Depends(get_session),current_user: str = Depends(get_current_user)):
     eqt = session.get(Routeur, id)
     if not eqt:
         raise HTTPException(404, "Equipement non trouvé")
@@ -121,7 +129,8 @@ def ssh_routeur(id: int, cmd: CommandeRequest, session: Session = Depends(get_se
     }
 
 @router.post("/ssh/Ordinateur/{id}")
-def ssh_ordinateur(id: int, cmd: CommandeRequest, session: Session = Depends(get_session)):
+def ssh_ordinateur(id: int, cmd: CommandeRequest, session: Session = Depends(get_session),
+                   current_user: str = Depends(get_current_user)):
     eqt = session.get(Ordinateur, id)
     if not eqt:
         raise HTTPException(404, "Equipement non trouvé")
@@ -130,7 +139,6 @@ def ssh_ordinateur(id: int, cmd: CommandeRequest, session: Session = Depends(get
         hostname=eqt.hostname if eqt.hostname else eqt.ip,
         username=eqt.username,
         password=eqt.password,
-        port=22
         )
     
     output, error, code = ssh_conn.execute_command(cmd.commandes)
@@ -141,10 +149,22 @@ def ssh_ordinateur(id: int, cmd: CommandeRequest, session: Session = Depends(get
         "exit_code": code
     }
 
-@router.post("/auth", response_model=Token)
-def token(requete:Requete, session: Session = Depends(get_session_user))->Token:
-    mail=requete.mail
-    mdp=requete.mdp
-    UserBDD=session.get(User,mail)
-    if verify_password(psswd_clair=mdp,psswd_bdd=UserBDD.MdpHash):
-        pass
+@router.post("/token", response_model=Token)
+async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],session: Session = Depends(get_session)):
+    user = authenticate_user(session, form_data.username, form_data.password)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    access_token = create_access_token(
+        data={"sub": user["email"]},
+        expires_delta=access_token_expires
+    )
+
+    return Token(access_token=access_token, token_type="bearer")
