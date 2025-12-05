@@ -126,5 +126,3 @@ Même fonctionnement que pour les routeurs, mais sur un ordinateur.
      ```
 
 L’application est simple à prendre en main : elle expose un ensemble d’outils directs, sans complexité inutile, permettant de gérer un parc informatique et d’y envoyer des commandes à distance.
-
-Si tu veux, je peux aussi te produire une version encore plus concise, ou un modèle de README complet avec sections standardisées (installation, architecture, sécurité, roadmap, etc.).
