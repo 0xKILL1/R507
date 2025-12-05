@@ -1,128 +1,139 @@
----
+-----
 
-# API Supervision
+# API de Supervision et Gestion d'Équipements
 
-Cette API offre un ensemble d’outils pour gérer et superviser des équipements tels que des ordinateurs et des routeurs. Elle permet également d’exécuter des commandes via SSH sur ces machines. Le but est simple permettre un accès direct pour piloter l’infrastructure.
+Cette API REST, développée avec **FastAPI**, permet la gestion d'inventaire d'équipements réseaux (Ordinateurs et Routeurs) et l'exécution de commandes à distance via SSH. Elle intègre un système d'authentification sécurisé via JWT.
 
----
+## 🛠️ Stack Technique
 
-## Base URL
+  * **Framework :** FastAPI
+  * **Base de données :** SQLModel (SQLAlchemy + Pydantic)
+  * **Sécurité :** OAuth2 (Password Flow) avec Tokens JWT
+  * **Protocole distant :** SSH (via `paramiko` implémenté dans le service SSH)
 
+## 📋 Fonctionnalités
+
+  * **CRUD complet** pour les entités `Ordinateur` et `Routeur`.
+  * **Exécution de commandes SSH** à distance sur les équipements enregistrés.
+  * **Authentification** des utilisateurs pour sécuriser les actions sensibles (SSH).
+
+## 🚀 Installation et Démarrage
+
+### 1\. Prérequis
+
+  * Python 3.9+
+  * Un gestionnaire de paquets (pip ou poetry)
+
+### 2\. Installation des dépendances
+
+Assurez-vous d'avoir un fichier `requirements.txt` contenant au minimum :
+
+```text
+fastapi
+uvicorn
+sqlmodel
+pydantic
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
+paramiko
 ```
-/api/v1/supervision
+
+Installez-les via :
+
+```bash
+pip install -r requirements.txt
 ```
 
----
+### 3\. Lancement du serveur
 
-# Gestion des Ordinateurs
+```bash
+uvicorn main:app --reload
+```
 
-## GET /Ordinateurs
+*L'API sera accessible par défaut sur `http://127.0.0.1:8000`.*
 
-Renvoie la liste complète de tous les ordinateurs enregistrés.
+-----
 
-## GET /Ordinateur/{host_id}
+## 🔐 Authentification
 
-Renvoie les informations d’un ordinateur spécifique.
-Retourne une erreur 404 si l’équipement n’existe pas.
+Cette API utilise **OAuth2 avec Bearer Tokens**.
 
-## POST /Ordinateur
+1.  Pour obtenir un token, envoyez une requête POST vers `/supervision/token` avec `username` et `password`.
+2.  Le token reçu doit être inclus dans les en-têtes des requêtes sécurisées (SSH) :
+      * **Header :** `Authorization`
+      * **Value :** `Bearer <votre_token>`
 
-Crée un nouvel ordinateur.
-Le corps de la requête doit contenir un objet conforme au modèle `Ordinateur`.
+-----
 
-## PUT /Ordinateur/{host_id}
+## 📚 Documentation de l'API
 
-Modifie un ordinateur existant.
-L’opération met à jour uniquement les champs `hostname` et `ip`.
+Toutes les routes sont préfixées par `/supervision`.
 
-## DELETE /Ordinateur/{host_id}
+### 1\. Gestion des Ordinateurs
 
-Supprime un ordinateur de la base.
+| Méthode | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/Ordinateurs` | Liste tous les ordinateurs. |
+| `POST` | `/Ordinateur` | Crée un nouvel ordinateur. |
+| `GET` | `/Ordinateur/{host_id}` | Récupère les détails d'un ordinateur spécifique. |
+| `PUT` | `/Ordinateur/{host_id}` | Met à jour un ordinateur (Hostname, IP). |
+| `DELETE` | `/Ordinateur/{host_id}` | Supprime un ordinateur. |
 
----
+### 2\. Gestion des Routeurs
 
-# Gestion des Routeurs
+| Méthode | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/Routeurs` | Liste tous les routeurs. |
+| `POST` | `/Routeur` | Crée un nouveau routeur. |
+| `GET` | `/Routeur/{host_id}` | Récupère les détails d'un routeur spécifique. |
+| `PUT` | `/Routeur/{host_id}` | Met à jour un routeur (Hostname, IP). |
+| `DELETE` | `/Routeur/{host_id}` | Supprime un routeur. |
 
-## GET /Routeurs
+### 3\. Actions SSH (Sécurisé 🔒)
 
-Renvoie la liste de tous les routeurs enregistrés.
+Ces endpoints nécessitent d'être authentifié. Ils permettent d'envoyer des commandes shell aux équipements.
 
-## GET /Routeur/{host_id}
+**Endpoint :** `POST /supervision/ssh/Ordinateur/{id}` ou `/supervision/ssh/Routeur/{id}`
 
-Retourne un routeur spécifique, ou une erreur 404 si non trouvé.
+**Corps de la requête (JSON) :**
 
-## POST /Routeur
+```json
+{
+  "commandes": "ls -la"
+}
+```
 
-Ajoute un routeur à la base de données.
+**Réponse :**
 
-## PUT /Routeur/{host_id}
+```json
+{
+  "output": "résultat de la commande...",
+  "error": "",
+  "exit_code": 0
+}
+```
 
-Modifie un routeur existant en mettant à jour `hostname` et `ip`.
+### 4\. Authentification
 
-## DELETE /Routeur/{host_id}
+**Endpoint :** `POST /supervision/token`
 
-Supprime un routeur de la base.
+Utilise un formulaire `x-www-form-urlencoded` :
 
----
+  * `username`: (email de l'utilisateur)
+  * `password`: (mot de passe)
 
-# Exécution de commandes SSH
+-----
 
-## POST /ssh/Routeur/{id}
+## 🏗️ Architecture des Données
 
-Exécute une commande SSH sur le routeur correspondant à l’identifiant fourni.
-Retourne :
+Voici comment les données circulent lors d'une requête SSH :
 
-* `output` – la sortie standard de la commande
-* `error` – la sortie d’erreur
-* `exit_code` – le code de retour
+L'objet `Ordinateur` ou `Routeur` attend généralement les champs suivants (définis dans `..models`) :
 
-## POST /ssh/Ordinateur/{id}
+  * `hostname`
+  * `ip`
+  * `username` (pour la connexion SSH)
+  * `password` (pour la connexion SSH)
 
-Même fonctionnement que pour les routeurs, mais sur un ordinateur.
-
----
-
-# Comment utiliser l’application
-
-1. **Lancer le serveur FastAPI**
-   Démarrez votre application FastAPI via Uvicorn par exemple :
-
-   ```
-   uvicorn main:app --reload
-   ```
-
-2. **Accéder à la documentation automatique**
-   Une fois le serveur en marche, la documentation Swagger est disponible à l’adresse :
-
-   ```
-   http://localhost:8000/docs#
-   ```
-
-   Elle permet de tester chaque endpoint directement depuis l’interface, sans écrire une seule ligne de code client.
-
-3. **Tester les endpoints**
-   Depuis `/docs#`, vous pouvez :
-
-   * consulter les routes disponibles,
-   * remplir les champs nécessaires,
-   * envoyer les requêtes et observer les réponses.
-
-4. **Utilisation via un client HTTP**
-   Vous pouvez interagir avec l’API via n’importe quel outil comme `curl`, Postman, Insomnia ou depuis votre propre application Python/JS/Go, par exemple :
-
-   ```
-   curl -X GET http://localhost:8000/supervision/Ordinateurs
-   ```
-
-5. **Manipuler les équipements**
-
-   * Ajouter ou modifier un équipement en envoyant un JSON conforme au modèle `Ordinateur` ou `Routeur`.
-   * Exécuter des commandes sur une machine via les routes SSH en envoyant :
-
-     ```json
-     {
-       "commandes": " <la commande que vous souhaiter executer>"
-     }
-     ```
-
-L’application est simple à prendre en main : elle expose un ensemble d’outils directs, sans complexité inutile, permettant de gérer un parc informatique et d’y envoyer des commandes à distance.
+-----
