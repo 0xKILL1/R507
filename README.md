@@ -1,98 +1,35 @@
------
-
 # API de Supervision et Gestion d'Équipements
 
-Cette API REST, développée avec **FastAPI**, permet la gestion d'inventaire d'équipements réseaux (Ordinateurs et Routeurs) et l'exécution de commandes à distance via SSH. Elle intègre un système d'authentification sécurisé via JWT.
----
+Cette API REST, développée avec **FastAPI**, permet la gestion d'inventaire d'équipements réseaux (Ordinateurs et Routeurs) et l'exécution de commandes à distance via SSH. Elle intègre un système d'authentification sécurisé via **JWT**.
 
-## 📸 Guide d'utilisation illustré
+-----
 
-Cette section détaille les étapes d'utilisation de l'API, de l'authentification à l'exécution de commandes, en se basant sur les images de Bruno et de votre script de test.
+## 🛠️ Stack Technique & Fonctionnalités
 
-### 1. 🔑 Authentification et Obtention du Token
-
-L'accès aux endpoints sécurisés (SSH) nécessite un jeton JWT.
-
-#### 1.1. Identifiants Root par Défaut
-Les identifiants de connexion initiaux (Root User) sont définis dans le code :
-* **Username/Email :** `root@gmail.com` (ou celui configuré)
-* **Password :** bonjour(ou celui configuré)
-
-![Identifiants Root User](img/compteRootParDefaut.jpg)
-
-#### 1.2. Récupération et Injection du Token
-Le jeton est récupéré via l'endpoint `/supervision/token`. L'utilisation d'un script (comme `testRecupToken.py`) est recommandée pour automatiser la connexion et l'injection du token dans les variables d'environnement de votre client HTTP (ex: Bruno).
-
-![Code du script de test pour le token](img/test.jpg)
-
-### 2. ➕ Ajout d'Équipements à Superviser
-
-Les requêtes `POST` sont utilisées pour enregistrer les équipements, y compris leurs identifiants SSH pour les connexions futures.
-
-#### 2.1. Ajouter un Ordinateur
-Utilisez l'endpoint `/supervision/Ordinateur` et fournissez les informations de connexion et d'identification.
-
-![Schéma de la requête pour ajouter un Ordinateur](img/ajoutOrdi.jpg)
-
-#### 2.2. Ajouter un Routeur
-Utilisez l'endpoint `/supervision/Routeur` pour enregistrer un nouveau routeur.
-
-![Schéma de la requête pour ajouter un Routeur](img/ajoutRouteurBr.jpg)
-
-### 3. ⌨️ Exécution de Commandes SSH (Sécurisée)
-
-Une fois le token récupéré (étape 1.2) et l'équipement ajouté (étape 2), vous pouvez exécuter des commandes.
-
-#### 3.1. Requête SSH avec Token Valide
-Le token valide est utilisé dans l'en-tête `Authorization: Bearer <TOKEN>` pour autoriser la requête et exécuter la commande à distance.
-
-![Exemple de requête SSH avec token valide](img/imagerequetesavectoken.jpg)
-
-### 4. 🛑 Gestion de l'Expiration du Token
-
-Le token JWT a une durée de validité limitée (fixée à 24 heures par défaut dans votre configuration).
-
-#### 4.1. Token Expiré ou Invalide
-Si le token est invalide ou a expiré, l'accès est refusé, entraînant une erreur `401 Unauthorized`. Vous devez relancer l'étape de récupération du token.
-
-![Réponse API en cas de token invalide ou absent](img/schemadedonnéeaenvoyécommande.jpg)
-
-## 🛠️ Stack Technique
+### Stack Technique
 
   * **Framework :** FastAPI
   * **Base de données :** SQLModel (SQLAlchemy + Pydantic)
   * **Sécurité :** OAuth2 (Password Flow) avec Tokens JWT
-  * **Protocole distant :** SSH (via `paramiko` implémenté dans le service SSH)
+  * **Protocole distant :** SSH (via `paramiko`)
 
-## 📋 Fonctionnalités
+### Fonctionnalités
 
   * **CRUD complet** pour les entités `Ordinateur` et `Routeur`.
   * **Exécution de commandes SSH** à distance sur les équipements enregistrés.
-  * **Authentification** des utilisateurs pour sécuriser les actions sensibles (SSH).
+  * **Authentification** des utilisateurs pour sécuriser les actions sensibles.
+
+-----
 
 ## 🚀 Installation et Démarrage
 
 ### 1\. Prérequis
 
   * Python 3.9+
-  * Un gestionnaire de paquets (pip)
 
 ### 2\. Installation des dépendances
 
-Assurez-vous d'avoir un fichier `requirements.txt` contenant au minimum :
-
-```text
-fastapi
-uvicorn
-sqlmodel
-pydantic
-python-multipart
-python-jose[cryptography]
-passlib[bcrypt]
-paramiko
-```
-
-Installez-les via :
+Installez les dépendances nécessaires (fastapi, uvicorn, sqlmodel, paramiko, etc.) via votre `requirements.txt` :
 
 ```bash
 pip install -r requirements.txt
@@ -100,93 +37,95 @@ pip install -r requirements.txt
 
 ### 3\. Lancement du serveur
 
+L'API sera accessible par défaut sur `http://127.0.0.1:8000`.
+
 ```bash
 uvicorn main:app --reload
 ```
-
-*L'API sera accessible par défaut sur `http://127.0.0.1:8000`.*
-
------
-
-## 🔐 Authentification
-
-Cette API utilise **OAuth2 avec Bearer Tokens**.
-
-1.  Pour obtenir un token, envoyez une requête POST vers `/supervision/token` avec `username` et `password`.
-2.  Le token reçu doit être inclus dans les en-têtes des requêtes sécurisées (SSH) :
-      * **Header :** `Authorization`
-      * **Value :** `Bearer <votre_token>`
 
 -----
 
 ## 📚 Documentation de l'API
 
-Toutes les routes sont préfixées par `/supervision`.
+Une documentation interactive complète est disponible automatiquement grâce à FastAPI une fois le serveur lancé :
 
-### 1\. Gestion des Ordinateurs
-
-| Méthode | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/Ordinateurs` | Liste tous les ordinateurs. |
-| `POST` | `/Ordinateur` | Crée un nouvel ordinateur. |
-| `GET` | `/Ordinateur/{host_id}` | Récupère les détails d'un ordinateur spécifique. |
-| `PUT` | `/Ordinateur/{host_id}` | Met à jour un ordinateur (Hostname, IP). |
-| `DELETE` | `/Ordinateur/{host_id}` | Supprime un ordinateur. |
-
-### 2\. Gestion des Routeurs
-
-| Méthode | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/Routeurs` | Liste tous les routeurs. |
-| `POST` | `/Routeur` | Crée un nouveau routeur. |
-| `GET` | `/Routeur/{host_id}` | Récupère les détails d'un routeur spécifique. |
-| `PUT` | `/Routeur/{host_id}` | Met à jour un routeur (Hostname, IP). |
-| `DELETE` | `/Routeur/{host_id}` | Supprime un routeur. |
-
-### 3\. Actions SSH (Sécurisé 🔒)
-
-Ces endpoints nécessitent d'être authentifié. Ils permettent d'envoyer des commandes shell aux équipements.
-
-**Endpoint :** `POST /supervision/ssh/Ordinateur/{id}` ou `/supervision/ssh/Routeur/{id}`
-
-**Corps de la requête (JSON) :**
-
-```json
-{
-  "commandes": "ls -la"
-}
-```
-
-**Réponse :**
-
-```json
-{
-  "output": "résultat de la commande...",
-  "error": "",
-  "exit_code": 0
-}
-```
-
-### 4\. Authentification
-
-**Endpoint :** `POST /supervision/token`
-
-Utilise un formulaire `x-www-form-urlencoded` :
-
-  * `username`: (email de l'utilisateur)
-  * `password`: (mot de passe)
+  * **Documentation Swagger UI :** `http://localhost:8000/docs`
+  * **Documentation ReDoc :** `http://localhost:8000/redoc`
 
 -----
 
-## 🏗️ Architecture des Données
+## 🔐 Guide d'Authentification et d'Utilisation
 
-Voici comment les données circulent lors d'une requête SSH :
+L'accès aux endpoints sécurisés est géré par des **Bearer Tokens**. Les identifiants Root User sont définis dans le code au démarrage.
 
-L'objet `Ordinateur` ou `Routeur` attend généralement les champs suivants (définis dans `..models`) :
+### 1\. 🔑 Authentification (Endpoint : `/supervision/token`)
 
-  * `hostname`
-  * `ip`
-  * `username` (pour la connexion SSH)
-  * `password` (pour la connexion SSH)
+| Étape | Description | Image |
+| :--- | :--- | :--- |
+| **1.1. Identification Root** | Les identifiants de connexion initiaux. | ![Credential dans le code](img/compteRootParDefaut.jpg) |
+| **1.2. Récupération du Token** | Utiliser le script de test (`testRecupToken.py`) pour obtenir le jeton JWT. | ![Code du script de test pour le token](img/test.jpg) |
+| **1.3. Copie du Token** | Copier la valeur du `access_token` retournée par le script. | ![Fenêtre affichant le token à copier](img/recuptoken.jpg) |
+| **1.4. Injection** | Injecter le token dans une variable d'environnement de votre client HTTP (ex: `AUTH_TOKEN` dans Bruno). | ![Injection du Token dans les paramètres auth de Bruno](img/sanstokenlesendpointprotegernefonctionnepas.jpg) |
+
+### 2\. ➕ Gestion CRUD des Équipements
+
+  * **Ajouter un Ordinateur** : Requête `POST` vers `/supervision/Ordinateur`.
+    ![Schéma de la requête pour ajouter un Ordinateur](img/ajoutOrdi.jpg)
+
+  * **Ajouter un Routeur** : Requête `POST` vers `/supervision/Routeur`.
+    ![Schéma de la requête pour ajouter un Routeur](img/ajoutRouteurBr.jpg)
+
+### 3\. ⌨️ Actions SSH (Sécurisées)
+
+  * **Faire une requête SSH avec token valide** : Le token est utilisé dans l'en-tête `Authorization` pour autoriser la commande.
+    ![Exemple de requête SSH avec token valide](img/imagerequetesavectoken.jpg)
+
+  * **Token Expiré (24h)** : En cas d'expiration ou de jeton invalide, l'accès est refusé (`401 Unauthorized`).
+-----
+
+## 🧪 Tester l'exécution SSH (avec Conteneur Local)
+
+Pour tester la fonctionnalité SSH de l'API contre un serveur SSH réel mais isolé, utilisez un conteneur SSH léger.
+
+### 1\. Lancement du Serveur SSH de Test
+
+Lancez le conteneur en mappant le port **22** de votre hôte au port 22 du conteneur. **Attention :** Le port 22 de l'hôte est souvent utilisé par le système d'exploitation.
+
+```bash
+docker run -d --name ssh_test_server -p 22:22 [NOM_DE_VOTRE_IMAGE_SSH]
+# Exemple : docker run -d --name ssh_test_server -p 22:22 alpine/sshd
+```
+
+### 2\. Enregistrer l'Équipement dans l'API
+
+Après avoir obtenu votre token, utilisez l'endpoint `POST /supervision/Ordinateur` (ou `Routeur`) pour enregistrer ce serveur de test dans l'API :
+
+| Champ | Valeur à utiliser |
+| :--- | :--- |
+| `ip` | `127.0.0.1` (votre machine hôte) |
+| `port` | **`22`** |
+| `username` | (Utilisateur configuré dans votre conteneur SSH) |
+| `password` | (Mot de passe configuré dans votre conteneur SSH) |
+
+### 3\. Exécuter la Commande SSH
+
+Utilisez ensuite l'endpoint SSH de l'API (`POST /supervision/ssh/Ordinateur/{id}`) pour envoyer la commande de test. L'API se connectera à `127.0.0.1:22`.
 
 -----
+
+## 📊 Modèle de Données
+
+Votre base de données, gérée par **SQLModel**, contient trois tables principales pour organiser les données de l'application :
+
+1.  **`User`** : Gère les identifiants pour l'authentification (login, token).
+2.  **`Ordinateur`** : Contient les informations des machines de type poste de travail ou serveur.
+3.  **`Routeur`** : Contient les informations des équipements réseau de type routeur.
+
+Chaque table d'équipement (`Ordinateur` et `Routeur`) attend les champs suivants pour la connexion SSH :
+
+* `hostname`
+* `ip`
+* `username`
+* `password`
+
+---
