@@ -6,13 +6,7 @@ from datetime import timedelta
 from ..models import Ordinateur, Routeur, User  
 from ..bdd import get_session
 from ..services.ssh_service import SSHConnection
-from .auth import (
-    authenticate_user,
-    create_access_token,
-    get_current_user,
-    ACCESS_TOKEN_EXPIRE_MINUTES,
-    Token
-)
+from .auth import authenticate_user,create_access_token,get_current_user,ACCESS_TOKEN_EXPIRE_MINUTES,Token
 from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter(prefix="/supervision",tags=["Gestion des équipements"])
