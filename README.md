@@ -2,7 +2,7 @@
 
 # API Supervision
 
-Cette API offre un ensemble d’outils pour gérer et superviser des équipements tels que des ordinateurs et des routeurs. Elle permet également d’exécuter des commandes via SSH sur ces machines. Le but est simple : offrir un point d’accès direct pour piloter l’infrastructure.
+Cette API offre un ensemble d’outils pour gérer et superviser des équipements tels que des ordinateurs et des routeurs. Elle permet également d’exécuter des commandes via SSH sur ces machines. Le but est simple permettre un accès direct pour piloter l’infrastructure.
 
 ---
 
